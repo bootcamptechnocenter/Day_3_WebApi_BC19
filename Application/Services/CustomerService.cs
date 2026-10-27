@@ -29,16 +29,16 @@ public class CustomerService : ICustomerService
         return Task.FromResult(customer);
     }
 
-    // public async Task<Customer?> UpdateAsync(int id, UpdateCustomerDto dto)
-    // {
-    //     var customer = await GetByIdAsync(id);
-    //     if (customer is null) return null;
+    public async Task<Customer?> UpdateAsync(int id, UpdateCustomerDto dto)
+    {
+        var customer = await GetByIdAsync(id);
+        if (customer is null) return null;
 
-    //     customer.Name = dto.Name;
-    //     customer.Email = dto.Email;
-    //     customer.MonthlyIncome = dto.MonthlyIncome;
-    //     return customer;
-    // }
+        customer.Name = dto.Name;
+        customer.Email = dto.Email;
+        customer.MonthlyIncome = dto.MonthlyIncome;
+        return customer;
+    }
 
     // public Task<bool> DeleteAsync(int id) =>
     //     Task.FromResult(_customers.RemoveAll(c => c.Id == id) > 0);
