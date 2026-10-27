@@ -1,5 +1,6 @@
 using EasyCreditApi.Application.DTO.Customer;
 using EasyCreditApi.Application.Interfaces;
+using EasyCreditApi.Domain.Entities;
 using Microsoft.AspNetCore.Mvc;
 
 namespace EasyCreditApi.Controllers;
@@ -49,19 +50,20 @@ public class CustomersController : ControllerBase  // ControllerBase = no view s
             customer);
     }
 
-    // [HttpPut("{id}")]                        // PUT /api/customers/5
-    // public async Task<IActionResult> Update(int id, [FromBody] UpdateCustomerDto dto)
-    // {
-    //     var customer = await _service.UpdateAsync(id, dto);
-    //     if (customer is null) return NotFound();
-    //     return Ok(customer);
-    // }
+    [HttpPut("{id}")]                        // PUT /api/customers/5
+    public async Task<IActionResult> Update(int id, [FromBody] ReqUpdateCustomerDto dto)
+    {
+        var customer = await _service.UpdateAsync(id, dto);
+        if (customer is null) return NotFound();
+        return Ok(customer);
+    }
+// }
 
-    // [HttpDelete("{id}")]                     // DELETE /api/customers/5
-    // public async Task<IActionResult> Delete(int id)
-    // {
-    //     var deleted = await _service.DeleteAsync(id);
-    //     if (!deleted) return NotFound();
-    //     return NoContent();                   // 204
-    // }
+    [HttpDelete("{id}")]                     // DELETE /api/customers/5
+    public async Task<IActionResult> Delete(int id)
+    {
+        var deleted = await _service.DeleteAsync(id);
+        if (!deleted) return NotFound();
+        return await GetAll();                   // 204
+    }
 }
