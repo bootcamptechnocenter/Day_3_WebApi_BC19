@@ -10,10 +10,11 @@
 using System;
 using System.Reflection;
 
+[assembly: Microsoft.Extensions.Configuration.UserSecrets.UserSecretsIdAttribute("c9983858-efca-4cc4-9053-90030cd16b77")]
 [assembly: System.Reflection.AssemblyCompanyAttribute("EasyCreditApi")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+060aba86999ddfc2dc1c3df8f2b14ed88a267af3")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+a3c4bed980077db78e683bb8dba0e4c0dd9b922a")]
 [assembly: System.Reflection.AssemblyProductAttribute("EasyCreditApi")]
 [assembly: System.Reflection.AssemblyTitleAttribute("EasyCreditApi")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

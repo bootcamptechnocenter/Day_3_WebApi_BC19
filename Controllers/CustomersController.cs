@@ -17,14 +17,19 @@ public class CustomersController : ControllerBase  // ControllerBase = no view s
     }
 
     [HttpGet]                                // GET /api/customers
-    public async Task<IActionResult> GetAll()
+    public async Task<IActionResult> GetAll([FromQuery] int page = 1, [FromQuery] int size = 2)
     {
+        page = Math.Max(page, 1);
+        size = Math.Clamp(size, 1, 100);
+
         var customers = await _service.GetAllAsync();
-        return Ok(customers);                 // 200 OK with JSON body
+        var items = customers.Skip((page - 1) * size).Take(size).ToList();
+
+        return Ok(new { page, size, total = customers.Count, items  });                 // 200 OK with JSON body
     }
 
-    [HttpGet("{id:int}")]               // GET /api/customers/5  (int constraint!)
-    public async Task<IActionResult> GetById(int id)
+    [HttpGet("{id}")]               // GET /api/customers/5  (int constraint!)
+    public async Task<IActionResult> GetById([FromRoute] int id)
     {
         var customer = await _service.GetByIdAsync(id);
         if (customer is null)

@@ -8,13 +8,24 @@
     ".NETCoreApp,Version=v10.0": {
       "EasyCreditApi/1.0.0": {
         "dependencies": {
+          "BCrypt.Net-Next": "4.2.0",
           "Microsoft.AspNetCore.Authentication.JwtBearer": "10.0.12",
           "Microsoft.AspNetCore.OpenApi": "10.0.13",
           "Npgsql.EntityFrameworkCore.PostgreSQL": "10.0.3",
-          "Oracle.ManagedDataAccess.Core": "3.21.130"
+          "Oracle.ManagedDataAccess.Core": "3.21.130",
+          "Refit.HttpClientFactory": "16.4.0",
+          "System.IdentityModel.Tokens.Jwt": "8.23.0"
         },
         "runtime": {
           "EasyCreditApi.dll": {}
+        }
+      },
+      "BCrypt.Net-Next/4.2.0": {
+        "runtime": {
+          "lib/net10.0/BCrypt-Net-Next.dll": {
+            "assemblyVersion": "4.2.0.0",
+            "fileVersion": "4.2.0.0"
+          }
         }
       },
       "Microsoft.AspNetCore.Authentication.JwtBearer/10.0.12": {
@@ -77,39 +88,39 @@
           }
         }
       },
-      "Microsoft.IdentityModel.Abstractions/8.19.2": {
+      "Microsoft.IdentityModel.Abstractions/8.23.0": {
         "runtime": {
           "lib/net10.0/Microsoft.IdentityModel.Abstractions.dll": {
-            "assemblyVersion": "8.19.2.0",
-            "fileVersion": "8.19.2.26195"
+            "assemblyVersion": "8.23.0.0",
+            "fileVersion": "8.23.0.26257"
           }
         }
       },
-      "Microsoft.IdentityModel.JsonWebTokens/8.19.2": {
+      "Microsoft.IdentityModel.JsonWebTokens/8.23.0": {
         "dependencies": {
-          "Microsoft.IdentityModel.Tokens": "8.19.2"
+          "Microsoft.IdentityModel.Tokens": "8.23.0"
         },
         "runtime": {
           "lib/net10.0/Microsoft.IdentityModel.JsonWebTokens.dll": {
-            "assemblyVersion": "8.19.2.0",
-            "fileVersion": "8.19.2.26195"
+            "assemblyVersion": "8.23.0.0",
+            "fileVersion": "8.23.0.26257"
           }
         }
       },
-      "Microsoft.IdentityModel.Logging/8.19.2": {
+      "Microsoft.IdentityModel.Logging/8.23.0": {
         "dependencies": {
-          "Microsoft.IdentityModel.Abstractions": "8.19.2"
+          "Microsoft.IdentityModel.Abstractions": "8.23.0"
         },
         "runtime": {
           "lib/net10.0/Microsoft.IdentityModel.Logging.dll": {
-            "assemblyVersion": "8.19.2.0",
-            "fileVersion": "8.19.2.26195"
+            "assemblyVersion": "8.23.0.0",
+            "fileVersion": "8.23.0.26257"
           }
         }
       },
       "Microsoft.IdentityModel.Protocols/8.19.2": {
         "dependencies": {
-          "Microsoft.IdentityModel.Tokens": "8.19.2"
+          "Microsoft.IdentityModel.Tokens": "8.23.0"
         },
         "runtime": {
           "lib/net10.0/Microsoft.IdentityModel.Protocols.dll": {
@@ -121,7 +132,7 @@
       "Microsoft.IdentityModel.Protocols.OpenIdConnect/8.19.2": {
         "dependencies": {
           "Microsoft.IdentityModel.Protocols": "8.19.2",
-          "System.IdentityModel.Tokens.Jwt": "8.19.2"
+          "System.IdentityModel.Tokens.Jwt": "8.23.0"
         },
         "runtime": {
           "lib/net10.0/Microsoft.IdentityModel.Protocols.OpenIdConnect.dll": {
@@ -130,15 +141,15 @@
           }
         }
       },
-      "Microsoft.IdentityModel.Tokens/8.19.2": {
+      "Microsoft.IdentityModel.Tokens/8.23.0": {
         "dependencies": {
           "Microsoft.Bcl.Cryptography": "10.0.2",
-          "Microsoft.IdentityModel.Logging": "8.19.2"
+          "Microsoft.IdentityModel.Logging": "8.23.0"
         },
         "runtime": {
           "lib/net10.0/Microsoft.IdentityModel.Tokens.dll": {
-            "assemblyVersion": "8.19.2.0",
-            "fileVersion": "8.19.2.26195"
+            "assemblyVersion": "8.23.0.0",
+            "fileVersion": "8.23.0.26257"
           }
         }
       },
@@ -197,6 +208,60 @@
           "lib/netstandard2.1/Oracle.ManagedDataAccess.dll": {
             "assemblyVersion": "3.1.21.1",
             "fileVersion": "0.0.0.0"
+          }
+        }
+      },
+      "ReactiveUI.Disposables/9.0.0": {
+        "runtime": {
+          "lib/net10.0/ReactiveUI.Disposables.dll": {
+            "assemblyVersion": "9.0.0.0",
+            "fileVersion": "9.0.0.0"
+          }
+        }
+      },
+      "ReactiveUI.Primitives/9.0.0": {
+        "dependencies": {
+          "ReactiveUI.Disposables": "9.0.0",
+          "ReactiveUI.Primitives.Core": "9.0.0"
+        },
+        "runtime": {
+          "lib/net10.0/ReactiveUI.Primitives.dll": {
+            "assemblyVersion": "9.0.0.0",
+            "fileVersion": "9.0.0.0"
+          }
+        }
+      },
+      "ReactiveUI.Primitives.Core/9.0.0": {
+        "dependencies": {
+          "ReactiveUI.Disposables": "9.0.0"
+        },
+        "runtime": {
+          "lib/net10.0/ReactiveUI.Primitives.Core.dll": {
+            "assemblyVersion": "9.0.0.0",
+            "fileVersion": "9.0.0.0"
+          }
+        }
+      },
+      "Refit/16.4.0": {
+        "dependencies": {
+          "ReactiveUI.Primitives": "9.0.0"
+        },
+        "runtime": {
+          "lib/net10.0/Refit.dll": {
+            "assemblyVersion": "16.0.0.0",
+            "fileVersion": "16.4.0.0"
+          }
+        }
+      },
+      "Refit.HttpClientFactory/16.4.0": {
+        "dependencies": {
+          "ReactiveUI.Primitives": "9.0.0",
+          "Refit": "16.4.0"
+        },
+        "runtime": {
+          "lib/net10.0/Refit.HttpClientFactory.dll": {
+            "assemblyVersion": "16.0.0.0",
+            "fileVersion": "16.4.0.0"
           }
         }
       },
@@ -303,15 +368,15 @@
           }
         }
       },
-      "System.IdentityModel.Tokens.Jwt/8.19.2": {
+      "System.IdentityModel.Tokens.Jwt/8.23.0": {
         "dependencies": {
-          "Microsoft.IdentityModel.JsonWebTokens": "8.19.2",
-          "Microsoft.IdentityModel.Tokens": "8.19.2"
+          "Microsoft.IdentityModel.JsonWebTokens": "8.23.0",
+          "Microsoft.IdentityModel.Tokens": "8.23.0"
         },
         "runtime": {
           "lib/net10.0/System.IdentityModel.Tokens.Jwt.dll": {
-            "assemblyVersion": "8.19.2.0",
-            "fileVersion": "8.19.2.26195"
+            "assemblyVersion": "8.23.0.0",
+            "fileVersion": "8.23.0.26257"
           }
         }
       },
@@ -369,6 +434,13 @@
       "serviceable": false,
       "sha512": ""
     },
+    "BCrypt.Net-Next/4.2.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-gwLD2KfCuwQesP17aVh4h6lpiMPEVt5Lbpndo0ej903hNUUTtyxt3ARdDjmuydBRTAUICc7OVKVbaOvc6SQYXA==",
+      "path": "bcrypt.net-next/4.2.0",
+      "hashPath": "bcrypt.net-next.4.2.0.nupkg.sha512"
+    },
     "Microsoft.AspNetCore.Authentication.JwtBearer/10.0.12": {
       "type": "package",
       "serviceable": true,
@@ -411,26 +483,26 @@
       "path": "microsoft.entityframeworkcore.relational/10.0.4",
       "hashPath": "microsoft.entityframeworkcore.relational.10.0.4.nupkg.sha512"
     },
-    "Microsoft.IdentityModel.Abstractions/8.19.2": {
+    "Microsoft.IdentityModel.Abstractions/8.23.0": {
       "type": "package",
       "serviceable": true,
-      "sha512": "sha512-HJbo/lnSfNHUfphPRT910poQc4T2/9+8svFLvzuaYHGAOJ2Tu+oEDqpX0BVP3BJ4OuUM1kylEKyaiX2fCAK3Cw==",
-      "path": "microsoft.identitymodel.abstractions/8.19.2",
-      "hashPath": "microsoft.identitymodel.abstractions.8.19.2.nupkg.sha512"
+      "sha512": "sha512-JjiBkKj12OKvuWr+kB5sQwb7fmWW5bi03Mq/rd2Fu/7YwZ1RWQO9KhI9lBxki4o1VvY0wzqny8c7nwx1uuZzVg==",
+      "path": "microsoft.identitymodel.abstractions/8.23.0",
+      "hashPath": "microsoft.identitymodel.abstractions.8.23.0.nupkg.sha512"
     },
-    "Microsoft.IdentityModel.JsonWebTokens/8.19.2": {
+    "Microsoft.IdentityModel.JsonWebTokens/8.23.0": {
       "type": "package",
       "serviceable": true,
-      "sha512": "sha512-ui3fuBT4fs8kdKfBthI4NzLYIBIneEVS8UrL1JVBzAn80UiKmngBBi0BEByE7n/9c+EElcfFlCMFFTqpkBSLNA==",
-      "path": "microsoft.identitymodel.jsonwebtokens/8.19.2",
-      "hashPath": "microsoft.identitymodel.jsonwebtokens.8.19.2.nupkg.sha512"
+      "sha512": "sha512-ePEm+mv5iswzckE3mygh52uFUeQpVlHa1B10nS4jpEyNV5tL1mLgRS9U5sMaRlhsPRsZ1DJP0+FhxSrOIfMGIg==",
+      "path": "microsoft.identitymodel.jsonwebtokens/8.23.0",
+      "hashPath": "microsoft.identitymodel.jsonwebtokens.8.23.0.nupkg.sha512"
     },
-    "Microsoft.IdentityModel.Logging/8.19.2": {
+    "Microsoft.IdentityModel.Logging/8.23.0": {
       "type": "package",
       "serviceable": true,
-      "sha512": "sha512-r5YLDIxGOnkVJHrqXv/iD1FM1CgGrQOdriXuvuWvTPmKbnGANhEysq9XKmN6IHjf2a+9bAGEpnoRBsAQlvJU5w==",
-      "path": "microsoft.identitymodel.logging/8.19.2",
-      "hashPath": "microsoft.identitymodel.logging.8.19.2.nupkg.sha512"
+      "sha512": "sha512-wSXXOoV4b4hhRcC492jyNBZkO0LWrcWtWP5Cl5ujrON3vTMlufXDT39gTZfBhFAZCV2XJtNU6DLHMDR6E9YpUg==",
+      "path": "microsoft.identitymodel.logging/8.23.0",
+      "hashPath": "microsoft.identitymodel.logging.8.23.0.nupkg.sha512"
     },
     "Microsoft.IdentityModel.Protocols/8.19.2": {
       "type": "package",
@@ -446,12 +518,12 @@
       "path": "microsoft.identitymodel.protocols.openidconnect/8.19.2",
       "hashPath": "microsoft.identitymodel.protocols.openidconnect.8.19.2.nupkg.sha512"
     },
-    "Microsoft.IdentityModel.Tokens/8.19.2": {
+    "Microsoft.IdentityModel.Tokens/8.23.0": {
       "type": "package",
       "serviceable": true,
-      "sha512": "sha512-GtPC1S02uH1gOO4fQ+zRysIicKmEXaYFP8PIkdJYXqMyruYhopre4ozVHp0XiDSA0+GJvOZH9prxCPvgBMg4Ww==",
-      "path": "microsoft.identitymodel.tokens/8.19.2",
-      "hashPath": "microsoft.identitymodel.tokens.8.19.2.nupkg.sha512"
+      "sha512": "sha512-PUowLq8gqICt+oepHWmKBOJmnVmWoQ5dOVn2CgwFMBZZOAEMHgCQLWs8ONYdsjAyjhDHaFy+AAx0OMG/oV06Zw==",
+      "path": "microsoft.identitymodel.tokens/8.23.0",
+      "hashPath": "microsoft.identitymodel.tokens.8.23.0.nupkg.sha512"
     },
     "Microsoft.OpenApi/2.12.2": {
       "type": "package",
@@ -488,6 +560,41 @@
       "path": "oracle.manageddataaccess.core/3.21.130",
       "hashPath": "oracle.manageddataaccess.core.3.21.130.nupkg.sha512"
     },
+    "ReactiveUI.Disposables/9.0.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-gt5vQ9e7yP/qsv1DbTR9AdwViJwqoHseTwyI/7muKetJMDg60QUv7RZShMj3RIjF48LNiHKABtxPq+Or+42bbA==",
+      "path": "reactiveui.disposables/9.0.0",
+      "hashPath": "reactiveui.disposables.9.0.0.nupkg.sha512"
+    },
+    "ReactiveUI.Primitives/9.0.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-WmfXpHHBun50DJwTHVDLcFyQIHN/WtaoYJ34GrByFW/CsWgOH0UyjC8h9nul551oRkIvbqBGy3xZiijNdchGRw==",
+      "path": "reactiveui.primitives/9.0.0",
+      "hashPath": "reactiveui.primitives.9.0.0.nupkg.sha512"
+    },
+    "ReactiveUI.Primitives.Core/9.0.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-alULlmIxJycMKxfZeadn5tjjRAP+9+qDX9ryOT9Tg5lQzn0SKQAnmhqMa+9l68ogexrEuK/fUc543KR+kGJCJg==",
+      "path": "reactiveui.primitives.core/9.0.0",
+      "hashPath": "reactiveui.primitives.core.9.0.0.nupkg.sha512"
+    },
+    "Refit/16.4.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-6GWfcHeVBioiNQHodPXOUw+2ahEY1GqtTqzLbu7yU4l2q5AkblYCMlpO/ypSJX6fkMlBDZ8qf0UYc7fsMeCgWg==",
+      "path": "refit/16.4.0",
+      "hashPath": "refit.16.4.0.nupkg.sha512"
+    },
+    "Refit.HttpClientFactory/16.4.0": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-nt42wtkvf27XYpu3rBrHrW+Awd2p9UVqU1vDFBfgVbwb9R2z1hvihbs9LP63EnDXZhuFsMyn79r6V+5pG2vTWQ==",
+      "path": "refit.httpclientfactory/16.4.0",
+      "hashPath": "refit.httpclientfactory.16.4.0.nupkg.sha512"
+    },
     "System.Configuration.ConfigurationManager/6.0.0": {
       "type": "package",
       "serviceable": true,
@@ -523,12 +630,12 @@
       "path": "system.drawing.common/6.0.0",
       "hashPath": "system.drawing.common.6.0.0.nupkg.sha512"
     },
-    "System.IdentityModel.Tokens.Jwt/8.19.2": {
+    "System.IdentityModel.Tokens.Jwt/8.23.0": {
       "type": "package",
       "serviceable": true,
-      "sha512": "sha512-gqhDC/icByKEutygpr+OFgAmjwTVowyzFjWB8K0q1ww8uFj5a1BQNL+QvijUl9uhq4p8OdDwcAIrjVC+eC9FVA==",
-      "path": "system.identitymodel.tokens.jwt/8.19.2",
-      "hashPath": "system.identitymodel.tokens.jwt.8.19.2.nupkg.sha512"
+      "sha512": "sha512-mUuRjk0KKvF3dlF7CKcnjHn/4TFaWRDGjDRtn1rACitoIflv96apfLD9KPDisyCEuc/0ierocnHCvIXBvCL4Sw==",
+      "path": "system.identitymodel.tokens.jwt/8.23.0",
+      "hashPath": "system.identitymodel.tokens.jwt.8.23.0.nupkg.sha512"
     },
     "System.Security.Cryptography.ProtectedData/6.0.0": {
       "type": "package",

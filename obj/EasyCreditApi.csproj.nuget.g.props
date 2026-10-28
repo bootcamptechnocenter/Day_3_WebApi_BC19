@@ -13,6 +13,7 @@
     <SourceRoot Include="/home/dimas/.nuget/packages/" />
   </ItemGroup>
   <ImportGroup Condition=" '$(ExcludeRestorePackageImports)' != 'true' ">
+    <Import Project="$(NuGetPackageRoot)refit/16.4.0/buildTransitive/netstandard2.0/refit.props" Condition="Exists('$(NuGetPackageRoot)refit/16.4.0/buildTransitive/netstandard2.0/refit.props')" />
     <Import Project="$(NuGetPackageRoot)microsoft.entityframeworkcore/10.0.4/buildTransitive/net10.0/Microsoft.EntityFrameworkCore.props" Condition="Exists('$(NuGetPackageRoot)microsoft.entityframeworkcore/10.0.4/buildTransitive/net10.0/Microsoft.EntityFrameworkCore.props')" />
   </ImportGroup>
 </Project>

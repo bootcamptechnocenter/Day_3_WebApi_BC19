@@ -2,6 +2,7 @@ using EasyCreditApi.Application.DTO.Customer;
 using EasyCreditApi.Application.Interfaces;
 using EasyCreditApi.Domain.Entities;
 
+
 public class CustomerService : ICustomerService
 {
     private readonly List<Customer> _customers = new();
@@ -22,7 +23,7 @@ public class CustomerService : ICustomerService
             Phone = dto.Phone,
             Email = dto.Email,
             Address = dto.Address,
-            CreatedAt = DateTime.UtcNow,
+            CreatedAt = DateTime.Now,
             IsActive = true
         };
         _customers.Add(customer);
