@@ -27,6 +27,11 @@ public class ExceptionMiddleware
             context.Response.StatusCode = 400;
             await context.Response.WriteAsJsonAsync(new { error = ex.Message });
         }
+        catch (ConflictException ex)
+        {
+            context.Response.StatusCode = StatusCodes.Status409Conflict;
+            await context.Response.WriteAsJsonAsync(new { error = ex.Message });
+        }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Unhandled exception");
@@ -45,6 +50,11 @@ public class ExceptionMiddleware
     public class ValidationException : Exception
     {
         public ValidationException(string message) : base(message) { }
+    }
+
+    public class ConflictException : Exception
+    {
+        public ConflictException(string message) : base(message) { }
     }
 }
 

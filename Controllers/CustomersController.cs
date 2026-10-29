@@ -1,6 +1,5 @@
 using EasyCreditApi.Application.DTO.Customer;
 using EasyCreditApi.Application.Interfaces;
-using EasyCreditApi.Domain.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -9,68 +8,54 @@ namespace EasyCreditApi.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 [Authorize]
-public class CustomersController : ControllerBase  // ControllerBase = no view support (API only)
+public class CustomersController : ControllerBase
 {
-    private readonly ICustomerService _service;    // Constructor injection
+    private readonly ICustomerService _service;
 
-    public CustomersController(ICustomerService service)
-    {
-        _service = service;
-    }
+    public CustomersController(ICustomerService service) => _service = service;
 
-    [HttpGet]                                // GET /api/customers
-    public async Task<IActionResult> GetAll([FromQuery] int page = 1, [FromQuery] int size = 2)
+    [HttpGet]
+    public async Task<IActionResult> GetAll(
+        [FromQuery] string? keyword,
+        [FromQuery] int page = 1,
+        [FromQuery] int size = 10)
     {
         page = Math.Max(page, 1);
         size = Math.Clamp(size, 1, 100);
 
-        var customers = await _service.GetAllAsync();
-        var items = customers.Skip((page - 1) * size).Take(size).ToList();
-
-        return Ok(new { page, size, total = customers.Count, items  });                 // 200 OK with JSON body
+        var (items, total) = await _service.GetPagedAsync(keyword, page, size);
+        return Ok(new { page, size, total, items });
     }
 
-    [HttpGet("{id}")]               // GET /api/customers/5  (int constraint!)
+    [HttpGet("{id:int}")]
     public async Task<IActionResult> GetById([FromRoute] int id)
     {
         var customer = await _service.GetByIdAsync(id);
-        if (customer is null)
-            return NotFound();                // 404
-        return Ok(customer);
+        return customer is null ? NotFound() : Ok(customer);
     }
 
-    [HttpPost]                               // POST /api/customers
+    [HttpPost]
     public async Task<IActionResult> Create([FromBody] ReqCreateCustomerDto dto)
     {
         var customer = await _service.CreateAsync(dto);
+
         return CreatedAtAction(
-            nameof(GetById),                  // Location header: /api/customers/{newId}
-            new
-            {
-                id = customer.CustomerId,
-                name = customer.Name,
-                nik = customer.Nik,
-                phone = customer.Phone,
-                email = customer.Email,
-                address = customer.Address
-            },
+            nameof(GetById),
+            new { id = customer.CustomerId },
             customer);
     }
 
-    [HttpPut("{id}")]                        // PUT /api/customers/5
+    [HttpPut("{id:int}")]
     public async Task<IActionResult> Update(int id, [FromBody] ReqUpdateCustomerDto dto)
     {
         var customer = await _service.UpdateAsync(id, dto);
-        if (customer is null) return NotFound();
-        return Ok(customer);
+        return customer is null ? NotFound() : Ok(customer);
     }
-// }
 
-    [HttpDelete("{id}")]                     // DELETE /api/customers/5
+    [HttpDelete("{id:int}")]
     public async Task<IActionResult> Delete(int id)
     {
         var deleted = await _service.DeleteAsync(id);
-        if (!deleted) return NotFound();
-        return await GetAll();                   // 204
+        return deleted ? NoContent() : NotFound();
     }
 }

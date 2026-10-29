@@ -1,47 +1,83 @@
 using EasyCreditApi.Application.DTO.Customer;
 using EasyCreditApi.Application.Interfaces;
 using EasyCreditApi.Domain.Entities;
+using EasyCreditApi.Infrastructure;
+using EasyCreditApi.Middleware;
+using Oracle.ManagedDataAccess.Client;
 
+namespace EasyCreditApi.Application.Services;
 
-public class CustomerService : ICustomerService
+public sealed class CustomerService : ICustomerService
 {
-    private readonly List<Customer> _customers = new();
-    private int _nextId = 1;
+    private readonly ICustomerRepository _repository;
 
-    public Task<List<Customer>> GetAllAsync() => Task.FromResult(_customers.ToList());
+    public CustomerService(ICustomerRepository repository) => _repository = repository;
 
-    public Task<Customer?> GetByIdAsync(int id) =>
-        Task.FromResult(_customers.FirstOrDefault(c => c.CustomerId == id));
-
-    public Task<Customer> CreateAsync(ReqCreateCustomerDto dto)
+    public async Task<(IReadOnlyList<Customer> Items, int Total)> GetPagedAsync(
+        string? keyword, int page, int size)
     {
+        var (items, total) = await _repository.GetPagedAsync(keyword, page, size);
+        return (items.ToList(), total);
+    }
+
+    public Task<Customer?> GetByIdAsync(int customerId) =>
+        _repository.GetByIdAsync(customerId);
+
+    public async Task<Customer> CreateAsync(ReqCreateCustomerDto dto)
+    {
+        var nik = dto.Nik.Trim();
+
+        if (await _repository.NikExistsAsync(nik))
+            throw new ExceptionMiddleware.ConflictException("NIK sudah terdaftar.");
+
         var customer = new Customer
         {
-            CustomerId = _nextId++,
-            Name = dto.Name,
-            Nik = dto.Nik,
+            Name = dto.Name.Trim(),
+            Nik = nik,
             Phone = dto.Phone,
             Email = dto.Email,
-            Address = dto.Address,
-            CreatedAt = DateTime.Now,
-            IsActive = true
+            Address = dto.Address
         };
-        _customers.Add(customer);
-        return Task.FromResult(customer);
+
+        try
+        {
+            await _repository.CreateAsync(customer);
+        }
+        catch (OracleException ex) when (ex.Number == 1)
+        {
+            // Menangkap race condition kalau unique index NIK ditambahkan.
+            throw new ExceptionMiddleware.ConflictException("NIK sudah terdaftar.");
+        }
+
+        return customer;
     }
 
     public async Task<Customer?> UpdateAsync(int id, ReqUpdateCustomerDto dto)
     {
-        var customer = await GetByIdAsync(id);
+        var customer = await _repository.GetByIdAsync(id);
         if (customer is null) return null;
 
-        customer.Name = dto.Name;
+        var nik = dto.Nik.Trim();
+
+        if (await _repository.NikExistsAsync(nik, id))
+            throw new ExceptionMiddleware.ConflictException("NIK sudah dipakai customer lain.");
+
+        customer.Name = dto.Name.Trim();
+        customer.Nik = nik;
+        customer.Phone = dto.Phone;
         customer.Email = dto.Email;
         customer.Address = dto.Address;
-        customer.IsActive = dto.IsActive;
-        return customer;
+
+        try
+        {
+            var updated = await _repository.UpdateAsync(customer);
+            return updated ? customer : null;
+        }
+        catch (OracleException ex) when (ex.Number == 1)
+        {
+            throw new ExceptionMiddleware.ConflictException("NIK sudah dipakai customer lain.");
+        }
     }
 
-    public Task<bool> DeleteAsync(int id) =>
-        Task.FromResult(_customers.RemoveAll(c => c.CustomerId == id) > 0);
+    public Task<bool> DeleteAsync(int id) => _repository.DeleteAsync(id);
 }
