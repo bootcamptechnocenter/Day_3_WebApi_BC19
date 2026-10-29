@@ -11,6 +11,10 @@ using EasyCreditApi.Application.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Secret lokal (connection string, API key, JWT key) — file ini di-gitignore.
+// Alternatif: environment variable (ConnectionStrings__Postgres, ApiKey, Jwt__Key).
+builder.Configuration.AddJsonFile("appsettings.Local.json", optional: true, reloadOnChange: true);
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 

@@ -1,1 +1,6 @@
-appsettings.json
+# Secret lokal — JANGAN pernah di-commit
+appsettings.Local.json
+
+# Build output
+bin/
+obj/
