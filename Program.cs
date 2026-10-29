@@ -11,6 +11,9 @@ using EasyCreditApi.Application.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
 builder.Services.AddDbContext<AppDbContext>(opt => opt.UseNpgsql(builder.Configuration.GetConnectionString("Postgres")));
 
 /// JWT
@@ -55,10 +58,14 @@ builder.Services.AddOpenApi();
 
 var app = builder.Build();
 
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
+    app.UseSwagger();
+    app.UseSwaggerUI();
+
 }
 
 app.UseWhen(

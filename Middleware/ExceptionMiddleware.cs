@@ -1,0 +1,56 @@
+namespace EasyCreditApi.Middleware;
+
+public class ExceptionMiddleware
+{
+    private readonly RequestDelegate _next;
+    private readonly ILogger<ExceptionMiddleware> _logger;
+
+    public ExceptionMiddleware(RequestDelegate next, ILogger<ExceptionMiddleware> logger)
+    {
+        _next = next;
+        _logger = logger;
+    }
+
+    public async Task InvokeAsync(HttpContext context)
+    {
+        try
+        {
+            await _next(context);  // Call next middleware
+        }
+        catch (NotFoundException ex)
+        {
+            context.Response.StatusCode = 404;
+            await context.Response.WriteAsJsonAsync(new { error = ex.Message });
+        }
+        catch (ValidationException ex)
+        {
+            context.Response.StatusCode = 400;
+            await context.Response.WriteAsJsonAsync(new { error = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unhandled exception");
+            context.Response.StatusCode = 500;
+            await context.Response.WriteAsJsonAsync(new { error = "Internal server error" });
+            // NEVER expose ex.Message in production!
+        }
+    }
+
+    public class NotFoundException : Exception
+    {
+        public NotFoundException(string message) : base(message) { }
+    }
+
+    // Our own validation exception (not System.ComponentModel.DataAnnotations.ValidationException)
+    public class ValidationException : Exception
+    {
+        public ValidationException(string message) : base(message) { }
+    }
+}
+
+// Extension method for clean registration
+public static class ExceptionMiddlewareExtensions
+{
+    public static IApplicationBuilder UseCustomExceptionHandler(this IApplicationBuilder app)
+        => app.UseMiddleware<ExceptionMiddleware>();
+}

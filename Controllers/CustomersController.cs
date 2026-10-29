@@ -1,12 +1,14 @@
 using EasyCreditApi.Application.DTO.Customer;
 using EasyCreditApi.Application.Interfaces;
 using EasyCreditApi.Domain.Entities;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace EasyCreditApi.Controllers;
 
-[ApiController]                              // Enables automatic validation, binding
-[Route("api/[controller]")]                  // Route = api/customers (class name - "Controller")
+[ApiController]
+[Route("api/[controller]")]
+[Authorize]
 public class CustomersController : ControllerBase  // ControllerBase = no view support (API only)
 {
     private readonly ICustomerService _service;    // Constructor injection

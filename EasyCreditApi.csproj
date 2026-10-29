@@ -14,6 +14,7 @@
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
     <PackageReference Include="Oracle.ManagedDataAccess.Core" Version="3.21.130" />
     <PackageReference Include="Refit.HttpClientFactory" Version="16.4.0" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="10.3.1" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.23.0" />
   </ItemGroup>
 
