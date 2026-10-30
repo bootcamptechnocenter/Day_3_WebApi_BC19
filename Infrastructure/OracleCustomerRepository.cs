@@ -2,6 +2,8 @@ using System.Data;
 using Dapper;
 using EasyCreditApi.Domain.Entities;
 using EasyCreditApi.Infrastructure.Oracle;
+using EasyCreditApi.Middleware;
+using Oracle.ManagedDataAccess.Client;
 
 namespace EasyCreditApi.Infrastructure;
 
@@ -150,12 +152,19 @@ public sealed class OracleCustomerRepository : ICustomerRepository
         p.Add("NewId", dbType: DbType.Int32, direction: ParameterDirection.Output);
         p.Add("CreatedAt", dbType: DbType.DateTime, direction: ParameterDirection.Output);
 
-        await conn.ExecuteAsync(
-            $"""
-             INSERT INTO {Table} (CUST_NAME, NIK, PHONE, EMAIL, ADDRESS, CREATED_AT)
-             VALUES (:Name, :Nik, :Phone, :Email, :Address, SYSDATE)
-             RETURNING ID, CREATED_AT INTO :NewId, :CreatedAt
-             """, p);
+        try
+        {
+            await conn.ExecuteAsync(
+                $"""
+                 INSERT INTO {Table} (CUST_NAME, NIK, PHONE, EMAIL, ADDRESS, CREATED_AT)
+                 VALUES (:Name, :Nik, :Phone, :Email, :Address, SYSDATE)
+                 RETURNING ID, CREATED_AT INTO :NewId, :CreatedAt
+                 """, p);
+        }
+        catch (OracleException ex) when (ex.Number == 1)   // ORA-00001: unique constraint
+        {
+            throw new DuplicateKeyException("NIK sudah terdaftar.", ex);
+        }
 
         customer.CustomerId = p.Get<int>("NewId");
         customer.CreatedAt = p.Get<DateTime>("CreatedAt");
@@ -166,38 +175,52 @@ public sealed class OracleCustomerRepository : ICustomerRepository
     {
         await using var conn = _factory.Create();
 
-        var affected = await conn.ExecuteAsync(
-            $"""
-             UPDATE {Table}
-                SET CUST_NAME = :Name,
-                    NIK       = :Nik,
-                    PHONE     = :Phone,
-                    EMAIL     = :Email,
-                    ADDRESS   = :Address
-              WHERE ID = :CustomerId
-             """,
-            new
-            {
-                customer.Name,
-                customer.Nik,
-                customer.Phone,
-                customer.Email,
-                customer.Address,
-                customer.CustomerId
-            });
+        try
+        {
+            var affected = await conn.ExecuteAsync(
+                $"""
+                 UPDATE {Table}
+                    SET CUST_NAME = :Name,
+                        NIK       = :Nik,
+                        PHONE     = :Phone,
+                        EMAIL     = :Email,
+                        ADDRESS   = :Address
+                  WHERE ID = :CustomerId
+                 """,
+                new
+                {
+                    customer.Name,
+                    customer.Nik,
+                    customer.Phone,
+                    customer.Email,
+                    customer.Address,
+                    customer.CustomerId
+                });
 
-        return affected > 0;
+            return affected > 0;
+        }
+        catch (OracleException ex) when (ex.Number == 1)
+        {
+            throw new DuplicateKeyException("NIK sudah dipakai customer lain.", ex);
+        }
     }
 
     public async Task<bool> DeleteAsync(int customerId)
     {
         await using var conn = _factory.Create();
 
-        var affected = await conn.ExecuteAsync(
-            $"DELETE FROM {Table} WHERE ID = :CustomerId",
-            new { CustomerId = customerId });
+        try
+        {
+            var affected = await conn.ExecuteAsync(
+                $"DELETE FROM {Table} WHERE ID = :CustomerId",
+                new { CustomerId = customerId });
 
-        return affected > 0;
+            return affected > 0;
+        }
+        catch (OracleException ex) when (ex.Number == 2292)   // ORA-02292: masih direferensikan FK
+        {
+            throw new ExceptionMiddleware.ConflictException("Customer masih punya pengajuan kredit; tidak bisa dihapus.");
+        }
     }
 
     private static string ToLikePattern(string keyword) =>

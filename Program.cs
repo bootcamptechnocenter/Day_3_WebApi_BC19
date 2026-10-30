@@ -5,9 +5,16 @@ using EasyCreditApi.Infrastructure.Security;
 using EasyCreditApi.Middleware;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
-using BCrypt;
 using EasyCreditApi.Application.Services;
+using EasyCreditApi.Controllers;
+using Microsoft.AspNetCore.Mvc.ApplicationParts;
+using Microsoft.AspNetCore.Mvc.Controllers;
+using System.Reflection;
+using EasyCreditApi.Infrastructure.ExternalApi;
 using EasyCreditApi.Infrastructure.Oracle;
+using EasyCreditApi.Infrastructure.Postgres;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi;
 using Dapper;
 using EasyCreditApi.Application.DTO;
 using Microsoft.AspNetCore.Mvc;
@@ -16,7 +23,8 @@ using Serilog;
 var builder = WebApplication.CreateBuilder(args);
 
 // Secret lokal (connection string, API key, JWT key) — file ini di-gitignore.
-// Alternatif: environment variable (ConnectionStrings__Oracle, ApiKey, Jwt__Key).
+// Alternatif: environment variable (ConnectionStrings__Oracle, ConnectionStrings__Postgres, ApiKey, Jwt__Key)
+// atau dotnet user-secrets.
 builder.Configuration.AddJsonFile("appsettings.Local.json", optional: true, reloadOnChange: true);
 
 // Serilog: sink & level diatur di section "Serilog" pada appsettings.json.
@@ -25,7 +33,29 @@ builder.Host.UseSerilog((ctx, services, cfg) => cfg
     .ReadFrom.Services(services));
 
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(c =>
+{
+    // Tombol "Authorize" di /swagger: isi X-Api-Key dan token JWT (tanpa kata "Bearer").
+    c.AddSecurityDefinition("ApiKey", new OpenApiSecurityScheme
+    {
+        Type = SecuritySchemeType.ApiKey,
+        In = ParameterLocation.Header,
+        Name = "X-Api-Key",
+        Description = "API key untuk semua endpoint /api/*"
+    });
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT",
+        Description = "accessToken dari POST /api/auth/login"
+    });
+    c.AddSecurityRequirement(document => new OpenApiSecurityRequirement
+    {
+        [new OpenApiSecuritySchemeReference("ApiKey", document)] = [],
+        [new OpenApiSecuritySchemeReference("Bearer", document)] = []
+    });
+});
 
 /// JWT
 var jwtSettings = builder.Configuration.GetSection("Jwt").Get<JwtSettings>()
@@ -66,7 +96,10 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("CanApproveLoans", policy => policy.RequireRole("Admin"));
+});
 
 // ── DEPENDENCY INJECTION ──
 builder.Services.AddScoped<ICustomerService, CustomerService>();
@@ -74,11 +107,35 @@ builder.Services.AddSingleton<IPasswordHasher, BCryptPasswordHasher>();
 builder.Services.AddSingleton<IUserRepository, InMemoryUserRepository>();
 builder.Services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
 builder.Services.AddScoped<IAuthService, AuthService>();
-builder.Services.AddSingleton<OracleConnectionFactory>();
-builder.Services.AddScoped<ICustomerRepository, OracleCustomerRepository>();
-builder.Services.AddScoped<OracleTransactionDemo>();
+builder.Services.AddCreditScoreService(builder.Configuration);
+
+// Provider database untuk customers: Oracle (default, Dapper) atau Postgres (contoh EF Core).
+// Applications (CREDIT_APPLICATIONS) hanya ada di Oracle.
+var provider = builder.Configuration["Database:Provider"] ?? "Oracle";
+var useOracle = !provider.Equals("Postgres", StringComparison.OrdinalIgnoreCase);
+
+if (useOracle)
+{
+    builder.Services.AddSingleton<OracleConnectionFactory>();
+    builder.Services.AddScoped<ICustomerRepository, OracleCustomerRepository>();
+    builder.Services.AddScoped<ICreditApplicationRepository, OracleCreditApplicationRepository>();
+    builder.Services.AddScoped<ICreditApplicationService, CreditApplicationService>();
+    builder.Services.AddScoped<OracleTransactionDemo>();
+}
+else
+{
+    builder.Services.AddDbContext<AppDbContext>(o =>
+        o.UseNpgsql(builder.Configuration.GetConnectionString("Postgres")));
+    builder.Services.AddScoped<ICustomerRepository, EfCustomerRepository>();
+}
 
 builder.Services.AddControllers()
+    .ConfigureApplicationPartManager(parts =>
+    {
+        // Applications hanya ada di Oracle: di mode Postgres controller-nya tidak dipetakan (404).
+        if (!useOracle)
+            parts.FeatureProviders.Add(new ExcludeControllersFeatureProvider(typeof(ApplicationsController)));
+    })
     .ConfigureApiBehaviorOptions(options =>
     {
         // Error validasi model -> 400 dengan format ApiResponse.
@@ -105,7 +162,11 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 
-    // Endpoint lab: hanya aktif di Development.
+}
+
+// Endpoint lab: hanya aktif di Development dan provider Oracle.
+if (app.Environment.IsDevelopment() && useOracle)
+{
     app.MapGet("/_dbping", async (OracleConnectionFactory factory) =>
     {
         await using var conn = factory.Create();
@@ -130,7 +191,7 @@ if (app.Environment.IsDevelopment())
     });
 }
 
-// Urutan: Serilog request log (paling luar) -> correlation/request log -> exception -> API key.
+// Urutan: Serilog request log (paling luar) -> correlation/request log -> exception -> Oracle error -> API key.
 app.UseSerilogRequestLogging(opts =>
 {
     opts.EnrichDiagnosticContext = (diag, http) =>
@@ -143,6 +204,10 @@ app.UseSerilogRequestLogging(opts =>
 app.UseRequestLogging();
 
 app.UseCustomExceptionHandler();
+
+// Di dalam exception handler: OracleException yang lolos dari repository dipetakan ke 4xx/5xx di sini.
+if (useOracle)
+    app.UseOracleExceptionHandler();
 
 app.UseWhen(
     ctx => ctx.Request.Path.StartsWithSegments("/api"),
@@ -157,3 +222,13 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+// Membuang controller tertentu dari daftar controller yang dipetakan MVC.
+sealed class ExcludeControllersFeatureProvider(params Type[] excluded) : IApplicationFeatureProvider<ControllerFeature>
+{
+    public void PopulateFeature(IEnumerable<ApplicationPart> parts, ControllerFeature feature)
+    {
+        foreach (var type in excluded)
+            feature.Controllers.Remove(type.GetTypeInfo());
+    }
+}

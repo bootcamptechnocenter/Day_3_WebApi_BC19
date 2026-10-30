@@ -1,4 +1,5 @@
 using EasyCreditApi.Application.DTO;
+using EasyCreditApi.Application.DTO.CreditScore;
 using EasyCreditApi.Application.DTO.Customer;
 using EasyCreditApi.Application.Interfaces;
 using EasyCreditApi.Domain.Entities;
@@ -62,12 +63,23 @@ public class CustomersController : ControllerBase
     }
 
     [HttpDelete("{id:int}")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Delete(int id)
     {
         var deleted = await _service.DeleteAsync(id);
         return deleted
             ? Ok(ApiResponse<object>.Success(null, "Customer berhasil dihapus."))
             : NotFound(ApiResponse<object>.Fail(NotFoundMessage));
+    }
+
+    [HttpGet("{id:int}/credit-score")]
+    public async Task<IActionResult> GetCreditScore(int id)
+    {
+        var score = await _service.GetCreditScoreAsync(id);
+        return score is null
+            ? StatusCode(StatusCodes.Status503ServiceUnavailable,
+                ApiResponse<object>.Fail("Layanan credit score sedang tidak tersedia."))
+            : Ok(ApiResponse<ResCreditScoreDto>.Success(score));
     }
 
     private static ResCustomerDto ToDto(Customer customer) => new()

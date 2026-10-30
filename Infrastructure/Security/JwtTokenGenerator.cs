@@ -23,10 +23,13 @@ public class JwtTokenGenerator : IJwtTokenGenerator
 
         var claims = new[]
         {
-           new Claim(ClaimTypes.NameIdentifier, userID.ToString()),
-           new Claim(ClaimTypes.Name, name),
-           new Claim(ClaimTypes.Role, role),
-           new Claim("iat", DateTimeOffset.Now.ToUnixTimeSeconds().ToString())
+           // Nama claim pendek, sesuai validasi di Program.cs
+           // (MapInboundClaims = false, NameClaimType = "name", RoleClaimType = "role").
+           new Claim(JwtRegisteredClaimNames.Sub, userID.ToString()),
+           new Claim(JwtRegisteredClaimNames.Name, name),
+           new Claim("role", role),
+           new Claim(JwtRegisteredClaimNames.Iat, DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString(),
+               ClaimValueTypes.Integer64)
         };
 
         var credentials = new SigningCredentials(

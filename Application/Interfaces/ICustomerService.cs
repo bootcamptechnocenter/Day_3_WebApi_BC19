@@ -1,3 +1,4 @@
+using EasyCreditApi.Application.DTO.CreditScore;
 using EasyCreditApi.Application.DTO.Customer;
 using EasyCreditApi.Domain.Entities;
 
@@ -11,4 +12,5 @@ public interface ICustomerService
     Task<Customer> CreateAsync(ReqCreateCustomerDto dto);
     Task<Customer?> UpdateAsync(int id, ReqUpdateCustomerDto dto);
     Task<bool> DeleteAsync(int id);
+    Task<ResCreditScoreDto?> GetCreditScoreAsync(int customerId);
 }
