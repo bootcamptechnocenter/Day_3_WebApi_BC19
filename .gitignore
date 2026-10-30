@@ -4,3 +4,4 @@ appsettings.Local.json
 # Build output
 bin/
 obj/
+Logs/

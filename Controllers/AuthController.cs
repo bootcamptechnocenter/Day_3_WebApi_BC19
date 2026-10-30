@@ -1,7 +1,7 @@
+using EasyCreditApi.Application.DTO;
 using EasyCreditApi.Application.DTO.Auth;
 using EasyCreditApi.Application.Interfaces;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
 
 namespace EasyCreditApi.Controllers;
@@ -23,14 +23,9 @@ public class AuthController : ControllerBase
     {
         var result = await _authService.LoginAsync(request.Email, request.Password);
         if (result is null)
-            return Unauthorized(new { message = "Invalid email or password" });
+            return Unauthorized(ApiResponse<object>.Fail("Invalid email or password"));
 
-        return Ok(new
-        {
-            accessToken = result.AccessToken,
-            role = result.Role,
-            expiresAt = result.ExpiresAt
-        });
+        return Ok(ApiResponse<ResLoginDto>.Success(result, "Login successful"));
     }
 
     [HttpPost("register")]
@@ -40,11 +35,13 @@ public class AuthController : ControllerBase
         try
         {
             var user = await _authService.RegisterAsync(request.Email, request.Password, request.Name);
-            return Ok(new { user.UserId, user.Email, user.Name });
+            return Ok(ApiResponse<object>.Success(
+                new { user.UserId, user.Email, user.Name },
+                "Registration successful"));
         }
         catch (InvalidOperationException ex)
         {
-            return Conflict(new { message = ex.Message });  // 409 — email already exists
+            return Conflict(ApiResponse<object>.Fail(ex.Message));  // 409 — email already exists
         }
     }
 }
