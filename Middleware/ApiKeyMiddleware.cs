@@ -1,3 +1,7 @@
+using EasyCreditApi.Application.DTO;
+
+namespace EasyCreditApi.Middleware;
+
 public class ApiKeyMiddleware
 {
     private const string HeaderName = "X-Api-Key";
@@ -15,7 +19,7 @@ public class ApiKeyMiddleware
         if (!context.Request.Headers.TryGetValue(HeaderName, out var provided) || provided != _apiKey)
         {
             context.Response.StatusCode = StatusCodes.Status401Unauthorized;
-            await context.Response.WriteAsJsonAsync(new { error = "Invalid or missing API key" });
+            await context.Response.WriteAsJsonAsync(ApiResponse<object>.Fail("Invalid or missing API key"));
             return;   // short-circuit: the controller never runs
         }
 

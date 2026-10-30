@@ -28,8 +28,8 @@ public class AuthService : IAuthService
             return null;
         }
 
-        var token = _jwtTokenGenerator.GenerateToken(user.UserId, user.Name, user.Role);
-        return new ResLoginDto(token, user.Role, user.Name, DateTime.Now.AddHours(1));
+        var (token, expiresAt) = _jwtTokenGenerator.GenerateToken(user.UserId, user.Name, user.Role);
+        return new ResLoginDto(token, user.Role, user.Name, expiresAt);
     }
 
     public async Task<User> RegisterAsync(string email, string password, string name)

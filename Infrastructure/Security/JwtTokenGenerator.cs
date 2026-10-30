@@ -3,7 +3,6 @@ using System.Security.Claims;
 using System.Text;
 using EasyCreditApi.Application.Interfaces;
 using EasyCreditApi.Domain.Entities;
-using Microsoft.AspNetCore.DataProtection;
 using Microsoft.IdentityModel.Tokens;
 
 namespace EasyCreditApi.Infrastructure.Security;
@@ -18,8 +17,10 @@ public class JwtTokenGenerator : IJwtTokenGenerator
             ?? throw new InvalidOperationException("Konfigurasi 'Jwt' tidak ditemukan");
     }
 
-    public string GenerateToken(int userID, string name, string role)
+    public (string Token, DateTime ExpiresAt) GenerateToken(int userID, string name, string role)
     {
+        var expiresAt = DateTime.UtcNow.AddMinutes(_settings.ExpiryMinutes);
+
         var claims = new[]
         {
            new Claim(ClaimTypes.NameIdentifier, userID.ToString()),
@@ -37,11 +38,11 @@ public class JwtTokenGenerator : IJwtTokenGenerator
             issuer: _settings.Issuer,
             audience: _settings.Audience,
             claims: claims,
-            expires: DateTime.Now.AddHours(_settings.ExpiryMinutes),
+            expires: expiresAt,
             signingCredentials: credentials
         );
 
-        return new JwtSecurityTokenHandler().WriteToken(token);
+        return (new JwtSecurityTokenHandler().WriteToken(token), expiresAt);
     }
 }
 

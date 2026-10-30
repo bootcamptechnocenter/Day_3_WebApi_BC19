@@ -1,3 +1,5 @@
+using EasyCreditApi.Application.DTO;
+
 namespace EasyCreditApi.Middleware;
 
 public class ExceptionMiddleware
@@ -20,23 +22,23 @@ public class ExceptionMiddleware
         catch (NotFoundException ex)
         {
             context.Response.StatusCode = 404;
-            await context.Response.WriteAsJsonAsync(new { error = ex.Message });
+            await context.Response.WriteAsJsonAsync(ApiResponse<object>.Fail(ex.Message));
         }
         catch (ValidationException ex)
         {
             context.Response.StatusCode = 400;
-            await context.Response.WriteAsJsonAsync(new { error = ex.Message });
+            await context.Response.WriteAsJsonAsync(ApiResponse<object>.Fail(ex.Message));
         }
         catch (ConflictException ex)
         {
             context.Response.StatusCode = StatusCodes.Status409Conflict;
-            await context.Response.WriteAsJsonAsync(new { error = ex.Message });
+            await context.Response.WriteAsJsonAsync(ApiResponse<object>.Fail(ex.Message));
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Unhandled exception");
             context.Response.StatusCode = 500;
-            await context.Response.WriteAsJsonAsync(new { error = "Internal server error" });
+            await context.Response.WriteAsJsonAsync(ApiResponse<object>.Fail("Internal server error"));
             // NEVER expose ex.Message in production!
         }
     }
