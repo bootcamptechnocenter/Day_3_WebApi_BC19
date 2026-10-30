@@ -191,7 +191,7 @@ if (app.Environment.IsDevelopment() && useOracle)
     });
 }
 
-// Urutan: Serilog request log (paling luar) -> correlation/request log -> exception -> API key.
+// Urutan: Serilog request log (paling luar) -> correlation/request log -> exception -> Oracle error -> API key.
 app.UseSerilogRequestLogging(opts =>
 {
     opts.EnrichDiagnosticContext = (diag, http) =>
@@ -204,6 +204,10 @@ app.UseSerilogRequestLogging(opts =>
 app.UseRequestLogging();
 
 app.UseCustomExceptionHandler();
+
+// Di dalam exception handler: OracleException yang lolos dari repository dipetakan ke 4xx/5xx di sini.
+if (useOracle)
+    app.UseOracleExceptionHandler();
 
 app.UseWhen(
     ctx => ctx.Request.Path.StartsWithSegments("/api"),
