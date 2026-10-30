@@ -1,6 +1,161 @@
-@EasyCreditApi_HostAddress = http://localhost:5052
+# Request untuk EasyCreditApi. Jalankan dari atas ke bawah.
+# Isi @ApiKey dengan nilai ApiKey di appsettings.Local.json / user-secrets.
+@HostAddress = http://localhost:5052
+@ApiKey = <isi-api-key>
+@Token = {{login.response.body.$.data.accessToken}}
+@UserToken = {{loginUser.response.body.$.data.accessToken}}
 
-GET {{EasyCreditApi_HostAddress}}/weatherforecast/
-Accept: application/json
+### Login sebagai Admin (seed di InMemoryUserRepository)
+# @name login
+POST {{HostAddress}}/api/auth/login
+X-Api-Key: {{ApiKey}}
+Content-Type: application/json
 
-###
+{
+  "email": "admin@mail.com",
+  "password": "Admin123!"
+}
+
+### Register user biasa (role "User")
+POST {{HostAddress}}/api/auth/register
+X-Api-Key: {{ApiKey}}
+Content-Type: application/json
+
+{
+  "email": "user@mail.com",
+  "password": "User123!",
+  "name": "User Biasa"
+}
+
+### Login sebagai User
+# @name loginUser
+POST {{HostAddress}}/api/auth/login
+X-Api-Key: {{ApiKey}}
+Content-Type: application/json
+
+{
+  "email": "user@mail.com",
+  "password": "User123!"
+}
+
+### ── Customers ──
+
+### List customers (paged, keyword opsional)
+GET {{HostAddress}}/api/customers?keyword=&page=1&size=10
+X-Api-Key: {{ApiKey}}
+Authorization: Bearer {{Token}}
+
+### Create customer
+POST {{HostAddress}}/api/customers
+X-Api-Key: {{ApiKey}}
+Authorization: Bearer {{Token}}
+Content-Type: application/json
+
+{
+  "name": "Budi Santoso",
+  "nik": "3171000000000001",
+  "phone": "081234567890",
+  "email": "budi@mail.com",
+  "address": "Jakarta"
+}
+
+### Get customer by id
+GET {{HostAddress}}/api/customers/1
+X-Api-Key: {{ApiKey}}
+Authorization: Bearer {{Token}}
+
+### Update customer
+PUT {{HostAddress}}/api/customers/1
+X-Api-Key: {{ApiKey}}
+Authorization: Bearer {{Token}}
+Content-Type: application/json
+
+{
+  "name": "Budi S.",
+  "nik": "3171000000000001",
+  "phone": "081298765432"
+}
+
+### Credit score customer
+GET {{HostAddress}}/api/customers/1/credit-score
+X-Api-Key: {{ApiKey}}
+Authorization: Bearer {{Token}}
+
+### Delete customer sebagai User -> 403
+DELETE {{HostAddress}}/api/customers/1
+X-Api-Key: {{ApiKey}}
+Authorization: Bearer {{UserToken}}
+
+### Delete customer sebagai Admin
+DELETE {{HostAddress}}/api/customers/1
+X-Api-Key: {{ApiKey}}
+Authorization: Bearer {{Token}}
+
+### ── Applications ──
+
+### List applications (filter opsional: customerId, status)
+GET {{HostAddress}}/api/applications?customerId=&status=&page=1&size=10
+X-Api-Key: {{ApiKey}}
+Authorization: Bearer {{Token}}
+
+### Create application (status DRAFT)
+POST {{HostAddress}}/api/applications
+X-Api-Key: {{ApiKey}}
+Authorization: Bearer {{Token}}
+Content-Type: application/json
+
+{
+  "customerId": 1,
+  "amount": 12000000,
+  "tenorMonths": 12,
+  "interestRate": 12.5,
+  "purpose": "Renovasi rumah"
+}
+
+### Get application by id
+GET {{HostAddress}}/api/applications/1
+X-Api-Key: {{ApiKey}}
+Authorization: Bearer {{Token}}
+
+### Update application (hanya DRAFT)
+PUT {{HostAddress}}/api/applications/1
+X-Api-Key: {{ApiKey}}
+Authorization: Bearer {{Token}}
+Content-Type: application/json
+
+{
+  "amount": 15000000,
+  "tenorMonths": 24,
+  "interestRate": 11.75,
+  "purpose": "Renovasi rumah"
+}
+
+### Submit (DRAFT -> SUBMITTED, ambil credit score)
+POST {{HostAddress}}/api/applications/1/submit
+X-Api-Key: {{ApiKey}}
+Authorization: Bearer {{Token}}
+
+### Approve sebagai User -> 403
+POST {{HostAddress}}/api/applications/1/approve
+X-Api-Key: {{ApiKey}}
+Authorization: Bearer {{UserToken}}
+
+### Approve sebagai Admin (SUBMITTED -> APPROVED, buat jadwal angsuran)
+POST {{HostAddress}}/api/applications/1/approve
+X-Api-Key: {{ApiKey}}
+Authorization: Bearer {{Token}}
+
+### Reject (hanya SUBMITTED)
+POST {{HostAddress}}/api/applications/1/reject
+X-Api-Key: {{ApiKey}}
+Authorization: Bearer {{Token}}
+
+### Jadwal angsuran
+GET {{HostAddress}}/api/applications/1/installments
+X-Api-Key: {{ApiKey}}
+Authorization: Bearer {{Token}}
+
+### Delete application (Admin, hanya DRAFT) -> 204
+DELETE {{HostAddress}}/api/applications/1
+X-Api-Key: {{ApiKey}}
+Authorization: Bearer {{Token}}

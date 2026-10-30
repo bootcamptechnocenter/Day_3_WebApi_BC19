@@ -1,17 +1,22 @@
+using EasyCreditApi.Application.DTO.CreditScore;
 using EasyCreditApi.Application.DTO.Customer;
 using EasyCreditApi.Application.Interfaces;
 using EasyCreditApi.Domain.Entities;
 using EasyCreditApi.Infrastructure;
 using EasyCreditApi.Middleware;
-using Oracle.ManagedDataAccess.Client;
 
 namespace EasyCreditApi.Application.Services;
 
 public sealed class CustomerService : ICustomerService
 {
     private readonly ICustomerRepository _repository;
+    private readonly ICreditScoreService _creditScore;
 
-    public CustomerService(ICustomerRepository repository) => _repository = repository;
+    public CustomerService(ICustomerRepository repository, ICreditScoreService creditScore)
+    {
+        _repository = repository;
+        _creditScore = creditScore;
+    }
 
     public async Task<(IReadOnlyList<Customer> Items, int Total)> GetPagedAsync(
         string? keyword, int page, int size)
@@ -43,9 +48,9 @@ public sealed class CustomerService : ICustomerService
         {
             await _repository.CreateAsync(customer);
         }
-        catch (OracleException ex) when (ex.Number == 1)
+        catch (DuplicateKeyException)
         {
-            // Menangkap race condition kalau unique index NIK ditambahkan.
+            // Race condition: NIK dipakai request lain di antara cek dan insert (unique index NIK).
             throw new ExceptionMiddleware.ConflictException("NIK sudah terdaftar.");
         }
 
@@ -73,11 +78,20 @@ public sealed class CustomerService : ICustomerService
             var updated = await _repository.UpdateAsync(customer);
             return updated ? customer : null;
         }
-        catch (OracleException ex) when (ex.Number == 1)
+        catch (DuplicateKeyException)
         {
             throw new ExceptionMiddleware.ConflictException("NIK sudah dipakai customer lain.");
         }
     }
 
     public Task<bool> DeleteAsync(int id) => _repository.DeleteAsync(id);
+
+    // null = customer ada tapi bureau tidak bisa memberi score.
+    public async Task<ResCreditScoreDto?> GetCreditScoreAsync(int customerId)
+    {
+        if (!await _repository.ExistsAsync(customerId))
+            throw new ExceptionMiddleware.NotFoundException("Customer tidak ditemukan.");
+
+        return await _creditScore.GetScoreAsync(customerId);
+    }
 }
