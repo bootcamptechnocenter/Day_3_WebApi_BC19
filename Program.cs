@@ -77,6 +77,10 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddSingleton<OracleConnectionFactory>();
 builder.Services.AddScoped<ICustomerRepository, OracleCustomerRepository>();
 builder.Services.AddScoped<OracleTransactionDemo>();
+builder.Services.AddScoped<ICustomerSpRepository, OracleCustomerSpRepository>();
+builder.Services.AddScoped<ICustomerSpService, CustomerSpService>();
+builder.Services.AddScoped<ICreditApplicationSpRepository, OracleCreditApplicationSpRepository>();
+builder.Services.AddScoped<ICreditApplicationSpService, CreditApplicationSpService>();
 
 builder.Services.AddControllers()
     .ConfigureApiBehaviorOptions(options =>
@@ -127,6 +131,21 @@ if (app.Environment.IsDevelopment())
         {
             return Results.Json(ApiResponse<object>.Fail(ex.Message), statusCode: 500);
         }
+    });
+
+    // Helper lab Day 6: kembalikan application ke SUBMITTED agar smoke test bisa diulang.
+    app.MapPost("/_reset-app/{id:int}", async (int id, OracleConnectionFactory factory) =>
+    {
+        await using var conn = factory.Create();
+        await conn.OpenAsync();
+        using var tx = conn.BeginTransaction();
+
+        var rows = await conn.ExecuteAsync(
+            "UPDATE EASYCREDIT.CREDIT_APPLICATIONS SET STATUS = 'SUBMITTED', APPROVED_BY = NULL, APPROVED_AT = NULL WHERE ID = :Id",
+            new { Id = id }, tx);
+
+        tx.Commit();
+        return Results.Ok(new { reset = rows });
     });
 }
 
