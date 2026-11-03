@@ -12,12 +12,18 @@ using Dapper;
 using EasyCreditApi.Application.DTO;
 using Microsoft.AspNetCore.Mvc;
 using Serilog;
+using EasyCreditApi.Infrastructure.Postgres;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Secret lokal (connection string, API key, JWT key) — file ini di-gitignore.
-// Alternatif: environment variable (ConnectionStrings__Oracle, ApiKey, Jwt__Key).
+// Alternatif: environment variable (ConnectionStrings__Oracle, ConnectionStrings__Postgres, ApiKey, Jwt__Key).
 builder.Configuration.AddJsonFile("appsettings.Local.json", optional: true, reloadOnChange: true);
+
+// PostgreSQL connection string diambil dari konfigurasi (appsettings.Local.json / env var). Jika tidak ada, hentikan app.
+var postgresConnectionString = builder.Configuration.GetConnectionString("Postgres")
+    ?? throw new InvalidOperationException("Connection string 'Postgres' tidak ditemukan.");
 
 // Serilog: sink & level diatur di section "Serilog" pada appsettings.json.
 builder.Host.UseSerilog((ctx, services, cfg) => cfg
@@ -30,6 +36,27 @@ builder.Services.AddSwaggerGen();
 /// JWT
 var jwtSettings = builder.Configuration.GetSection("Jwt").Get<JwtSettings>()
     ?? throw new InvalidOperationException("Konfigurasi 'Jwt' tidak ditemukan");
+
+// Repo latihan tidak menyimpan secret. Di Development, pakai key lokal agar app
+// bisa dijalankan tanpa appsettings.Local.json. Di luar Development, key wajib diisi.
+if (string.IsNullOrWhiteSpace(jwtSettings.Key))
+{
+    // if (!builder.Environment.IsDevelopment())
+    throw new InvalidOperationException("Konfigurasi 'Jwt:Key' wajib diisi.");
+
+    jwtSettings.Key = "easycredit-dev-only-jwt-key-change-me-32chars";
+    builder.Configuration["Jwt:Key"] = jwtSettings.Key;
+}
+
+// API key middleware juga butuh nilai lokal saat latihan.
+// Frontend mengirim header X-Api-Key dengan nilai yang sama.
+if (string.IsNullOrWhiteSpace(builder.Configuration["ApiKey"]))
+{
+    // if (!builder.Environment.IsDevelopment())
+    throw new InvalidOperationException("Konfigurasi 'ApiKey' wajib diisi.");
+
+    builder.Configuration["ApiKey"] = "easycredit-dev-api-key";
+}
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -71,17 +98,24 @@ builder.Services.AddAuthorization();
 // ── DEPENDENCY INJECTION ──
 builder.Services.AddScoped<ICustomerService, CustomerService>();
 builder.Services.AddSingleton<IPasswordHasher, BCryptPasswordHasher>();
-builder.Services.AddSingleton<IUserRepository, InMemoryUserRepository>();
+// builder.Services.AddSingleton<IUserRepository, InMemoryUserRepository>();
 builder.Services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddSingleton<OracleConnectionFactory>();
-builder.Services.AddScoped<ICustomerRepository, OracleCustomerRepository>();
+// builder.Services.AddScoped<ICustomerRepository, OracleCustomerRepository>();
 builder.Services.AddScoped<OracleTransactionDemo>();
 builder.Services.AddScoped<ICustomerSpRepository, OracleCustomerSpRepository>();
 builder.Services.AddScoped<ICustomerSpService, CustomerSpService>();
 builder.Services.AddScoped<ICreditApplicationSpRepository, OracleCreditApplicationSpRepository>();
 builder.Services.AddScoped<ICreditApplicationSpService, CreditApplicationSpService>();
+builder.Services.AddScoped<IUserRepository, EfUserRepository>();
+builder.Services.AddScoped<ICustomerRepository, EfCustomerRepository>();
+builder.Services.AddDbContext<AppDbContext>(options =>
+{
+    options.UseNpgsql(postgresConnectionString);
+});
 
+// Project API hanya melayani endpoint JSON di /api.
 builder.Services.AddControllers()
     .ConfigureApiBehaviorOptions(options =>
     {
@@ -173,6 +207,7 @@ app.UseAuthentication();
 
 app.UseAuthorization();
 
+// Semua endpoint API memakai attribute routing (/api/...).
 app.MapControllers();
 
 app.Run();

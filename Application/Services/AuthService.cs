@@ -1,6 +1,7 @@
 using EasyCreditApi.Application.DTO.Auth;
 using EasyCreditApi.Application.Interfaces;
 using EasyCreditApi.Domain.Entities;
+using EasyCreditApi.Infrastructure;
 
 namespace EasyCreditApi.Application.Services;
 

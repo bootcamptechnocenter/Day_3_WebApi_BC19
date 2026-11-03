@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace EasyCreditApi.Controllers;
 
 [ApiController]
-[Route("api/[controller]")]
+[Route("api/customers")]
 [Authorize]
 public class CustomersController : ControllerBase
 {
